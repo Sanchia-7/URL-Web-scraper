@@ -56,6 +56,10 @@ async def handle_message(message: cl.Message):
         await progress.update()
 
         await asyncio.sleep(1)
+        progress.content = "⚡ Switching to JavaScript rendering if needed..."
+        await progress.update()
+
+        await asyncio.sleep(1)
         progress.content = "🧹 **Cleaning & validating text...**"
         await progress.update()
 
@@ -64,7 +68,7 @@ async def handle_message(message: cl.Message):
         await progress.update()
 
         # Run pipeline (blocking step)
-        result = run_pipeline(url)
+        result = await run_pipeline(url)
 
         await asyncio.sleep(0.8)
         progress.content = "✅ **Summary ready!**"
@@ -82,12 +86,14 @@ async def handle_message(message: cl.Message):
         ).send()
 
     except (RuntimeError, ValueError) as exc:
-        await progress.update()
         await cl.Message(
-            content=f"❌ **Error occurred**\n{exc}"
+            content=f"❌ **Error**\n{exc}"
         ).send()
 
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         await cl.Message(
-            content="❌ **Unexpected error**\nPlease try another webpage."
-        ).send()
+            content=(
+            "❌ **Unexpected error occurred**\n\n"
+            f"🔍 Details: `{exc}`"
+        )
+    ).send()
