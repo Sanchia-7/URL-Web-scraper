@@ -1,5 +1,17 @@
-requests
-beautifulsoup4
-python-dotenv
-langchain
-langchain-openai
+# Core
+python-dotenv>=1.0.0
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+
+# LLM / Azure
+langchain>=0.2.0
+langchain-openai>=0.1.8
+
+# UI
+chainlit>=2.9.6
+
+# JavaScript Rendering
+playwright>=1.57.0
+
+# Quality
+pylint>=3.0.0

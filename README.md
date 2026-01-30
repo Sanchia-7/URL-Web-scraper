@@ -1,32 +1,32 @@
 # AI Web Scraper & Summarizer (Azure OpenAI + Chainlit)
 
-An AI-powered web scraping and summarization application that fetches webpage content, cleans and validates it, and generates concise summaries using **Azure OpenAI**. The project includes a **Chainlit-based UI** for interactive usage.
+An **AI-powered, hybrid web scraping and summarization system** that supports both **static HTML** and **JavaScript-rendered websites** using a fallback strategy. The application provides a **conversational UI built with Chainlit** and uses **Azure OpenAI** for high-quality summaries.
 
 ---
 
-## 🚀 Features
+## ✨ Key Highlights
 
-* 🌐 Fetches content from public webpages
-* 🧹 Cleans and extracts readable text from HTML
-* ✅ Validates extracted content
+* 🌐 Scrapes **static HTML websites** using HTTP requests
+* ⚡ Automatically falls back to **JavaScript rendering (Playwright)** when needed
 * 🤖 Summarizes content using **Azure OpenAI (GPT models)**
-* 🛡️ Handles blocked websites and network errors gracefully
-* 💬 Interactive conversational UI using **Chainlit**
+* 💬 Interactive **Chainlit UI** with progress animations
+* 🛡️ Graceful handling of blocked, JS-heavy, and authenticated websites
+* 🧠 Clean, modular, and evaluation-ready architecture
 
 ---
 
 ## 🧠 Architecture Overview
 
 ```
-User (UI)
-   ↓
-Chainlit UI (ui.py)
-   ↓
-Pipeline Orchestrator
-   ↓
-[ Fetcher → Cleaner → Validator → Azure OpenAI Summarizer ]
-   ↓
-Structured Summary Output
+User
+ ↓
+Chainlit UI (app.py)
+ ↓
+Async Pipeline Orchestrator
+ ↓
+[ HTML Fetcher ] ──▶ Validator ──▶ Azure OpenAI
+        │
+        └─▶ (Fallback) JS Fetcher (Playwright)
 ```
 
 ---
@@ -36,23 +36,23 @@ Structured Summary Output
 ```
 web-scraper/
 │
-├── app.py                     # Chainlit UI entry point
-├── main.py                   # CLI entry point (optional)
+├── app.py                    # Chainlit UI (async)
 │
 ├── pipeline/
-│   └── run_pipeline.py       # Orchestrates the agent pipeline
+│   └── run_pipeline.py       # Async orchestration logic
 │
 ├── scraper/
-│   ├── fetcher.py            # HTTP fetching with headers
-│   ├── cleaner.py            # HTML to text processing
-│   └── validator.py          # Content validation
+│   ├── fetcher.py            # HTTP-based scraper
+│   ├── js_fetcher.py         # JavaScript-enabled scraper (Playwright async)
+│   ├── cleaner.py            # HTML → readable text
+│   └── validator.py          # Content validation & site-aware checks
 │
 ├── summarizer/
 │   ├── llm.py                # Azure OpenAI integration
 │   └── prompt.py             # Prompt templates
 │
-├── config.py                 # Environment & Azure config loader
-├── .env                      # Azure credentials (not committed)
+├── config.py                 # Azure & environment config
+├── .env                      # Secrets (not committed)
 ├── requirements.txt
 └── README.md
 ```
@@ -65,7 +65,7 @@ web-scraper/
 
 ```bash
 python -m venv venv
-venv\Scripts\activate   # Windows
+venv\\Scripts\\activate   # Windows
 ```
 
 ---
@@ -78,7 +78,15 @@ pip install -r requirements.txt
 
 ---
 
-### 3️⃣ Configure Azure OpenAI
+### 3️⃣ Install Playwright Browser
+
+```bash
+python -m playwright install chromium
+```
+
+---
+
+### 4️⃣ Configure Azure OpenAI
 
 Create a `.env` file in the project root:
 
@@ -89,22 +97,22 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
 ```
 
-⚠️ **Important**
+⚠️ Notes:
 
-* Do NOT add quotes
-* Restart terminal / IDE after creating `.env`
+* Do **not** use quotes
+* Restart terminal / IDE after saving
 
 ---
 
 ## ▶️ Running the Application
 
-### Option A: Run with UI (Recommended)
+### 🚀 Start the Chainlit UI (Recommended)
 
 ```bash
-chainlit run app.py
+python -m chainlit run app.py
 ```
 
-Open browser at:
+Open your browser at:
 
 ```
 http://localhost:8000
@@ -114,45 +122,36 @@ Paste a webpage URL to receive an AI-generated summary.
 
 ---
 
-### Option B: Run via CLI
+## 🌍 Supported Website Types
 
-```bash
-python main.py
-```
+| Website Type | Example             | Supported          |
+| ------------ | ------------------- | ------------------ |
+| Static HTML  | BBC, Wikipedia      | ✅ Yes              |
+| JS-rendered  | Blogs, Recipe sites | ✅ Yes (Playwright) |
+| Auth-gated   | Instagram, LinkedIn | ❌ Limited          |
 
----
-
-### ⚠️ May Be Blocked (Handled Gracefully)
-
-* AllRecipes
-* Medium
-* LinkedIn
-
-> Some websites deploy bot-detection systems that block automated requests.
+> Platforms requiring login or aggressive bot protection may restrict content access.
 
 ---
 
-## 🛡️ Error Handling
+## 🛡️ Error Handling & UX
 
-* Network timeouts
-* Bot-blocked websites (HTTP 403 / 460)
-* Empty or insufficient content
-* Invalid user input
-
-Errors are reported cleanly in the UI.
+* Detects empty / insufficient content
+* Automatically escalates to JavaScript rendering
+* Explains failures clearly to the user
+* Prevents hallucinated summaries
 
 ---
 
-## 🧪 Technologies Used
+## 🧪 Tech Stack
 
 * Python 3.10+
+* Chainlit (UI)
+* Azure OpenAI (LLMs)
+* LangChain
 * Requests
 * BeautifulSoup4
-* Azure OpenAI
-* LangChain
-* Chainlit
-* dotenv
+* Playwright (async)
+* python-dotenv
 
 ---
-
-
