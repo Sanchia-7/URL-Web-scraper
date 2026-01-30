@@ -1,47 +1,93 @@
+"""
+Chainlit UI for the AI Web Scraper & Summarizer.
+
+Provides an interactive, animated user interface for scraping
+and summarizing webpages using Azure OpenAI.
+"""
+
+import asyncio
 import chainlit as cl
 from pipeline.run_pipeline import run_pipeline
 
 
 @cl.on_chat_start
 async def start():
+    """
+    Initializes the chat session with a friendly animated greeting.
+    """
+    await cl.Message(
+        content="👋 **Welcome to the AI Web Scraper & Summarizer**"
+    ).send()
+
+    await asyncio.sleep(0.5)
+
     await cl.Message(
         content=(
-            "👋 **AI Web Scraper & Summarizer**\n\n"
-            "Paste a webpage URL and I will:\n"
-            "• Fetch the content\n"
-            "• Clean and validate it\n"
-            "• Generate an AI summary using Azure OpenAI\n\n"
-            "🔗 Please enter a URL to begin."
+            "I can help you:\n"
+            "🌐 Fetch webpage content\n"
+            "🧹 Clean & validate text\n"
+            "🤖 Generate an AI-powered summary\n\n"
+            "🔗 **Paste a webpage URL to get started!**"
         )
     ).send()
 
 
 @cl.on_message
 async def handle_message(message: cl.Message):
+    """
+    Handles user input, runs the scraping pipeline,
+    and displays animated progress updates.
+    """
     url = message.content.strip()
 
     if not url.startswith("http"):
         await cl.Message(
-            content="❌ Please enter a valid URL starting with http or https."
+            content="❌ **Invalid URL**\nPlease enter a URL starting with `http` or `https`."
         ).send()
         return
 
-    loading_msg = cl.Message(content="⏳ Fetching and summarizing webpage...")
-    await loading_msg.send()
+    # Animated progress message
+    progress = cl.Message(content="⏳ **Initializing pipeline...**")
+    await progress.send()
 
     try:
+        await asyncio.sleep(1)
+        progress.content = "🌐 **Fetching webpage content...**"
+        await progress.update()
+
+        await asyncio.sleep(1)
+        progress.content = "🧹 **Cleaning & validating text...**"
+        await progress.update()
+
+        await asyncio.sleep(1)
+        progress.content = "🤖 **Summarizing with Azure OpenAI...**"
+        await progress.update()
+
+        # Run pipeline (blocking step)
         result = run_pipeline(url)
 
+        await asyncio.sleep(0.8)
+        progress.content = "✅ **Summary ready!**"
+        await progress.update()
+
+        # Final formatted result
         await cl.Message(
             content=(
-                f"✅ **Summary Generated**\n\n"
-                f"🔗 **URL:** {result['url']}\n\n"
-                f"📝 **Summary:**\n{result['summary']}\n\n"
-                f"📊 **Word Count:** {result['word_count']}"
+                "✨ **AI Summary** ✨\n\n"
+                f"🔗 **Source:** {result['url']}\n\n"
+                "📝 **Summary:**\n"
+                f"{result['summary']}\n\n"
+                f"📊 **Word Count:** `{result['word_count']}`"
             )
         ).send()
 
-    except Exception as e:
+    except (RuntimeError, ValueError) as exc:
+        await progress.update()
         await cl.Message(
-            content=f"❌ **Error:** {str(e)}"
+            content=f"❌ **Error occurred**\n{exc}"
+        ).send()
+
+    except Exception:  # pylint: disable=broad-exception-caught
+        await cl.Message(
+            content="❌ **Unexpected error**\nPlease try another webpage."
         ).send()
